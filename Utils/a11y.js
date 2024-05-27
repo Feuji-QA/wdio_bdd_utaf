@@ -22,7 +22,7 @@ async function runAccessibilityTests(){
     createHtmlReport({
         results: results,
         options: {
-            projectKey: "thesphere.com",
+            projectKey: "sauceLabs",
             reportFileName: 'accessibilityReport.html',
             outputDir: ".tmp/report/",
         },

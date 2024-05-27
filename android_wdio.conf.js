@@ -9,10 +9,10 @@ const RPClient = require("@reportportal/client-javascript");
 const glob = require("glob");
 const RPconfig = {
   apiKey:
-    "MSG_ar4YdRVzQbSlxLdQvMa6I5qpsNgOZJIAvcLfdmDkdfEOR30tNbA2AennvzpSIj6P",
+    "WebdriverIO-UTAF_lj7BivXCQKmc_OyggHy4uOZsWmv19IO2WmB_hwy5FmB6_W1R1XIFO___TgmHA4Py",
   endpoint: "http://10.10.90.97:8080/api/v1",
   launch: "Regression",
-  project: "msg_poc",
+  project: "webdriver_utaf",
   description: "WDIO Cucumber for Mobile Automation",
   attributes: [
     {
@@ -186,7 +186,7 @@ exports.config = {
   // see also: https://webdriver.io/docs/dot-reporter
   reporters: [
     ["cucumberjs-json", { jsonFolder: ".tmp/mobile/json/", language: "en" }],
-    // [Reporter, RPconfig],
+    [Reporter, RPconfig],
   ],
   // If you are using Cucumber you need to specify the location of your step definitions.
   cucumberOpts: {
