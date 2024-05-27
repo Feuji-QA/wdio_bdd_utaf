@@ -40,8 +40,7 @@ export function handleFailedRequests() {
 export default function () {
   const startTime = new Date().getTime(); // Capture start time
 
-  msg();
-  theSphere();
+  sauceLabs();
  
 
   const endTime = new Date().getTime(); // Capture end time
@@ -58,8 +57,8 @@ function sauceLabs() {
   const url = 'https://www.saucedemo.com/v1';
  
   const response = http.get(url);
-  check(response, { 'status is 200': (r) => r.status === 200 }, { type: 'msg' }); // Assign a 'type' tag to the check for authentication
-  check(response, { 'response time is less than 300ms': (r) => r.timings.duration < 300 }, { type: 'msg' }); // Assign a 'type' tag to the check for authentication
+  check(response, { 'status is 200': (r) => r.status === 200 }, { type: 'sauceLabs' }); // Assign a 'type' tag to the check for authentication
+  check(response, { 'response time is less than 300ms': (r) => r.timings.duration < 300 }, { type: 'sauceLabs' }); // Assign a 'type' tag to the check for authentication
   
   // Increment failed requests counter if the request failed
   if (!check(response, { 'status is 200': (r) => r.status === 200 })) {
