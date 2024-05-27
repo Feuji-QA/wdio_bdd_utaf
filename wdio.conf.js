@@ -14,7 +14,7 @@ const RPconfig = {
     "WebdriverIO-UTAF_lj7BivXCQKmc_OyggHy4uOZsWmv19IO2WmB_hwy5FmB6_W1R1XIFO___TgmHA4Py",
   endpoint: "http://10.10.90.97:8080/api/v1",
   launch: "Regression",
-  project: "webdriver_utaf",
+  project: "webdriverio_utaf",
   description: "WDIO Cucumber",
   attributes: [
     {
