@@ -1,13 +1,39 @@
 const { generate } = require("multiple-cucumber-html-reporter");
 const { removeSync } = require("fs-extra");
-const cucumberJson = require("wdio-cucumberjs-json-reporter").default;
-const path=require('path');
-require('dotenv').config();
-
-exports.config = {
-  suites: {
-    MOBILE: ["./features/booking.com.feature"],
+const { attach } = require("wdio-cucumberjs-json-reporter");
+const { chai, expect } = require("chai");
+const path = require("path");
+require("dotenv").config();
+const { Reporter } = require("@reportportal/agent-js-webdriverio");
+const RPClient = require("@reportportal/client-javascript");
+const glob = require("glob");
+const RPconfig = {
+  apiKey:
+    "MSG_ar4YdRVzQbSlxLdQvMa6I5qpsNgOZJIAvcLfdmDkdfEOR30tNbA2AennvzpSIj6P",
+  endpoint: "http://10.10.90.97:8080/api/v1",
+  launch: "Regression",
+  project: "msg_poc",
+  description: "WDIO Cucumber for Mobile Automation",
+  attributes: [
+    {
+      key: "tool",
+      value: "Cucumber",
+    },
+    {
+      key: "OS",
+      value: "Android",
+    },
+  ],
+  description: "MSG POC with WDIO",
+  restClientConfig: {
+    timeout: 0,
   },
+  // includeTestSteps: true,
+  skippedIssue: false,
+  isLaunchMergeRequired: true,
+  attachPicturesToLogs: true,
+};
+exports.config = {
   //
   // ====================
   // Runner Configuration
@@ -15,6 +41,7 @@ exports.config = {
   // WebdriverIO supports running e2e tests as well as unit and component tests.
   runner: "local",
   port: 4723,
+
   //
   // ==================
   // Specify Test Files
@@ -30,6 +57,9 @@ exports.config = {
   // The path of the spec files will be resolved relative from the directory of
   // of the config file unless it's absolute.
   //
+  suites: {
+    mobile: ["./features/lettyshops.feature"],
+  },
   // Patterns to exclude.
   exclude: [
     // 'path/to/excluded/files'
@@ -50,7 +80,7 @@ exports.config = {
   // and 30 processes will get spawned. The property handles how many capabilities
   // from the same test should run tests.
   //
-  maxInstances: 10,
+  maxInstances: 1,
   //
   // If you have trouble getting all important capabilities together, check out the
   // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -63,10 +93,16 @@ exports.config = {
       "appium:automationName": "UiAutomator2",
       "appium:platformVersion": "14",
       "appium:deviceName": "emulator-5554",
-      "appium:appPackage": "com.booking",
+      "appium:appPackage": "com.letyshops",
       "appium:app":path.join(process.cwd(),process.env.app),
-      "appium:appActivity": "com.booking.startup.HomeActivity",
+      "appium:appActivity": "com.letyshops.presentation.view.activity.SplashActivity",
     },
+  ],
+
+  services: [
+    // [
+    //     'appium',
+    // ],
   ],
 
   //
@@ -77,6 +113,12 @@ exports.config = {
   //
   // Level of logging verbosity: trace | debug | info | warn | error | silent
   logLevel: "info",
+
+  logLevels: {
+    webdriver: "info",
+    "@wdio/appium-service": "debug",
+  },
+
   //
   // Set specific log levels per logger
   // loggers:
@@ -95,6 +137,9 @@ exports.config = {
   // If you only want to run your tests until a specific amount of tests have failed use
   // bail (default is 0 - don't bail, run all tests).
   bail: 0,
+  sync: false,
+  coloredLogs: true,
+
   //
   // Set a base URL in order to shorten url command calls. If your `url` parameter starts
   // with `/`, the base url gets prepended, not including the path portion of your baseUrl.
@@ -116,8 +161,8 @@ exports.config = {
   // Services take over a specific job you don't want to take care of. They enhance
   // your test setup with almost no effort. Unlike plugins, they don't add new
   // commands. Instead, they hook themselves up into the test process.
-  //services: ['appium'],
-
+  // services: [],
+  //
   // Framework you want to run your specs with.
   // The following are supported: Mocha, Jasmine, and Cucumber
   // see also: https://webdriver.io/docs/frameworks
@@ -125,18 +170,7 @@ exports.config = {
   // Make sure you have the wdio adapter package for the specific framework installed
   // before running any tests.
   framework: "cucumber",
-  reporters: [
-    // Like this with the default options, see the options below
-    "cucumberjs-json",
-    // OR like this if you want to set the folder and the language
-    [
-      "cucumberjs-json",
-      {
-        jsonFolder: ".tmp/json/mobile/",
-        language: "en",
-      },
-    ],
-  ],
+
   //
   // The number of times to retry the entire specfile when it fails as a whole
   // specFileRetries: 1,
@@ -150,7 +184,10 @@ exports.config = {
   // Test reporter for stdout.
   // The only one supported by default is 'dot'
   // see also: https://webdriver.io/docs/dot-reporter
-
+  reporters: [
+    ["cucumberjs-json", { jsonFolder: ".tmp/mobile/json/", language: "en" }],
+    // [Reporter, RPconfig],
+  ],
   // If you are using Cucumber you need to specify the location of your step definitions.
   cucumberOpts: {
     // <string[]> (file/dir) require files before executing features
@@ -192,8 +229,9 @@ exports.config = {
    * @param {object} config wdio configuration object
    * @param {Array.<Object>} capabilities list of capabilities details
    */
-  // onPrepare: function (config, capabilities) {
-  // },
+  onPrepare: function (config, capabilities) {
+    removeSync(".tmp/mobile/json/");
+  },
   /**
    * Gets executed before a worker process is spawned and can be used to initialize specific service
    * for that worker as well as modify runtime environments in an async fashion.
@@ -248,6 +286,7 @@ exports.config = {
    * @param {GherkinDocument.IFeature} feature  Cucumber feature object
    */
   // beforeFeature: function (uri, feature) {
+
   // },
   /**
    *
@@ -277,8 +316,11 @@ exports.config = {
    * @param {number}             result.duration  duration of scenario in milliseconds
    * @param {object}             context          Cucumber World object
    */
-  // afterStep: function (step, scenario, result, context) {
-  // },
+  afterStep: async function (step, scenario, result) {
+    if (!result.passed) {
+      attach(await browser.takeScreenshot(), "image/png");
+    }
+  },
   /**
    *
    * Runs after a Cucumber Scenario.
@@ -334,17 +376,26 @@ exports.config = {
    * @param {Array.<Object>} capabilities list of capabilities details
    * @param {<Object>} results object containing test results
    */
-  onComplete: () => {
-    // Generate the report when it all tests are done
+  onComplete: async function (exitCode, config, capabilities, results) {
+    // First part: generate report
     generate({
-      // Required
-      // This part needs to be the same path where you store the JSON files
-      // default = '.tmp/json/'
-
-      jsonDir: ".tmp/json/mobile/",
+      jsonDir: ".tmp/mobile/json/",
       reportPath: ".tmp/report/mobile/",
-      // for more options see https://github.com/wswebcreation/multiple-cucumber-html-reporter#options
     });
+
+    // Second part: merge launches if required
+    // if (RPconfig.isLaunchMergeRequired) {
+    //   try {
+    //     const client = new RPClient(RPconfig);
+    //     await client.mergeLaunches();
+    //     console.log("Launches successfully merged!");
+    //   } catch (error) {
+    //     console.error(error);
+    //   } finally {
+    //     const files = glob.sync("rplaunch-*.tmp");
+    //     files.forEach((filename) => fs.unlinkSync(filename));
+    //   }
+    // }
   },
   /**
    * Gets executed when a refresh happens.

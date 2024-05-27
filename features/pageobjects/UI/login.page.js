@@ -16,6 +16,10 @@ class LoginPage extends Page {
         return $(".app_logo")
     }
 
+    async visual_Negative(){
+        expect(await browser.checkScreen("Image_Negative"), {}).to.equal(0);
+      }
+
     async login (username, password) {
         expect(await this.inputUsername.isExisting()).to.be.true;
         expect(await this.inputPassword.isExisting()).to.be.true;

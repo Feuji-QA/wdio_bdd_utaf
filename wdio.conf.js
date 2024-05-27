@@ -1,6 +1,36 @@
 const { generate } = require("multiple-cucumber-html-reporter");
 const { removeSync } = require("fs-extra");
+const path = require("path");
 const { attach } = require("wdio-cucumberjs-json-reporter");
+const { Reporter } = require("@reportportal/agent-js-webdriverio");
+const RPClient = require("@reportportal/client-javascript");
+const { expect } = require("chai").expect;
+const glob = require("glob");
+let startTime;
+let endTime;
+const fs=require('fs');
+const RPconfig = {
+  apiKey:
+    "MSG_ar4YdRVzQbSlxLdQvMa6I5qpsNgOZJIAvcLfdmDkdfEOR30tNbA2AennvzpSIj6P",
+  endpoint: "http://10.10.90.97:8080/api/v1",
+  launch: "Regression",
+  project: "msg_poc",
+  description: "WDIO Cucumber",
+  attributes: [
+    {
+      key: "tool",
+      value: "Cucumber",
+    },
+  ],
+  description: "MSG POC with WDIO",
+  restClientConfig: {
+    timeout: 0,
+  },
+  // includeTestSteps: true,
+  skippedIssue: false,
+  isLaunchMergeRequired: true,
+  attachPicturesToLogs: true,
+};
 exports.config = {
   //
   // ====================
@@ -8,8 +38,9 @@ exports.config = {
   // ====================
   // WebdriverIO supports running e2e tests as well as unit and component tests.
   suites: {
-    UI: ["./features/swagLabs.feature"],
-    API: ["./features/bookstoreAPI.feature"],
+    ui: ["./features/sauceLabs.feature"],
+    api: ["./features/bookstoreAPI.feature"],
+    accessibility: ["./features/accessibility.feature"],
   },
   runner: "local",
 
@@ -121,7 +152,16 @@ exports.config = {
   // Services take over a specific job you don't want to take care of. They enhance
   // your test setup with almost no effort. Unlike plugins, they don't add new
   // commands. Instead, they hook themselves up into the test process.
-  services: ["chromedriver"],
+  services: ["chromedriver",["visual",
+  {
+    baselineFolder: path.join(process.cwd(), "./baselineImages/"),
+    formatImageName: "{tag}-{logName}",
+    screenshotPath: path.join(process.cwd(), "/actualImages/"),
+    savePerInstance: true,
+    autoSaveBaseline: true,
+    blockOutStatusBar: true,
+    blockOutToolBar: true,
+  }]],
 
   // Framework you want to run your specs with.
   // The following are supported: Mocha, Jasmine, and Cucumber
@@ -145,10 +185,11 @@ exports.config = {
   // see also: https://webdriver.io/docs/dot-reporter
   reporters: [
     // Like this with the default options, see the options below
-    'cucumberjs-json',
-],
+    ["cucumberjs-json", { jsonFolder: ".tmp/json/", language: "en" }],
+    [Reporter, RPconfig],
+  ],
   before: async () => {
-    global.expect = chai.expect;
+    global.expect = expect;
   },
 
   //
@@ -194,7 +235,8 @@ exports.config = {
    * @param {Array.<Object>} capabilities list of capabilities details
    */
   onPrepare: function (config, capabilities) {
-    removeSync(".tmp/");
+    removeSync(".tmp/json/");
+    startTime = new Date();
   },
   /**
    * Gets executed before a worker process is spawned and can be used to initialise specific service
@@ -284,9 +326,45 @@ exports.config = {
    * @param {number}             result.duration  duration of scenario in milliseconds
    * @param {Object}             context          Cucumber World object
    */
-  afterStep: async function (step, scenario, result) {
+  afterStep: async function (Step, Scenario, result) {
+    const scenarioName = Scenario.name;
     if (!result.passed) {
-      attach(await browser.takeScreenshot(), 'image/png');
+      let screenshotPath;
+      let screenshotPath_actual;
+      let screenshotPath_baseLine;
+      if ( scenarioName == "Visual testing Negative case") {
+        screenshotPath_actual = path.join(
+          process.cwd(),
+          "actualImages/actual/desktop_chrome/",
+          "Image_Negative-.png"
+        );
+        screenshotPath_baseLine = path.join(
+          process.cwd(),
+          "baselineImages/desktop_chrome/",
+          "Image_Negative-.png"
+        );
+        screenshotPath = path.join(
+          process.cwd(),
+          "actualImages/diff/desktop_chrome/",
+          "Image_Negative-.png"
+        );
+        const absolutePath = path.resolve(screenshotPath);
+        const absolutePath1 = path.resolve(screenshotPath_actual);
+        const absolutePath2 = path.resolve(screenshotPath_baseLine);
+        const imageDiffScreenshot = fs.readFileSync(absolutePath, "base64");
+        const actualImgScreenshot = fs.readFileSync(absolutePath1, "base64");
+        const baselineScreenshot = fs.readFileSync(absolutePath2, "base64");
+        attach("BaseLine Image", "text/plain");
+        attach(baselineScreenshot, "image/png");
+        attach("Actual Image", "text/plain");
+        attach(actualImgScreenshot, "image/png");
+        attach("Difference we are getting while comparing Actual and Baseline images", "text/plain");
+        attach(imageDiffScreenshot, "image/png");
+      }
+      else {
+        const screenshot = await browser.takeScreenshot();
+        attach(screenshot, "image/png");
+      }
     }
   },
 
@@ -347,17 +425,45 @@ exports.config = {
    * @param {<Object>} results object containing test results
    */
 
-  onComplete: () => {
-    // Generate the report when it all tests are done
+  onComplete: async function (exitCode, config, capabilities, results) {
+    endTime = new Date();
+    const formatDate = (date) => {
+      return date.toLocaleString("en-US", { timeZone: "IST" });
+    };
+    const executionStartTime = formatDate(startTime);
+    const executionEndTime = formatDate(endTime);
+    const durationMillis = endTime - startTime;
+    const duration = new Date(durationMillis).toISOString().substr(11, 8);
+    // First part: generate report
     generate({
-      // Required
-      // This part needs to be the same path where you store the JSON files
-      // default = '.tmp/json/'
-
       jsonDir: ".tmp/json/",
       reportPath: ".tmp/report/",
-      // for more options see https://github.com/wswebcreation/multiple-cucumber-html-reporter#options
+      customData: {
+        title: "Run info",
+        data: [
+          { label: "Project", value: "wdio" },
+          { label: "Execution Start Time", value: executionStartTime },
+          { label: "Execution End Time", value: executionEndTime },
+          { label: "Duration", value: duration },
+        ],
+      },
     });
+    if (RPconfig.isLaunchMergeRequired) {
+      try {
+        const client = new RPClient(RPconfig);
+        await client.mergeLaunches();
+        console.log("Launches successfully merged!");
+      } catch (error) {
+        console.error(error);
+      } finally {
+        const files = glob.sync("rplaunch-*.tmp");
+        const deleteTempFile = (filename) => {
+          fs.unlinkSync(filename);
+        };
+        files.forEach(deleteTempFile);
+      }
+    }
+  
   },
 
   /**
