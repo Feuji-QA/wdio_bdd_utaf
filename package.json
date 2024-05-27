@@ -11,6 +11,7 @@
     "mobile": "npx wdio android_wdio.conf.js --suite mobile",
     "accessibility": "npx wdio wdio.conf.js --suite accessibility",
     "ui_mobile": "npx wdio wdio.conf.js --suite ui || npx wdio android_wdio.conf.js --suite mobile",
+    "performance": "k6 run -o experimental-prometheus-rw=http://10.10.90.97:9090/api/v1/write utils/performance.js",
     "parallel": "concurrently \"npx wdio wdio.conf.js --suite ui\" \"npx wdio wdio.conf.js --suite api\" \"npx wdio android_wdio.conf.js --suite mobile\""
   },
   "keywords": [],
