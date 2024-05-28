@@ -9,8 +9,14 @@ steps:
   inputs:
     versionSpec: '18.x'
   displayName: 'Install Node.js'
-- script: |     
-    echo "Installing Google Chrome"     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb     sudo apt install -y ./google-chrome-stable_current_amd64.deb  
+
+- script: |
+      sudo apt-get update
+      sudo apt-get install -y wget apt-transport-https
+      wget -qO- https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+      echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+      sudo apt-get update
+      sudo apt-get install -y google-chrome-stable
   displayName: 'Install Google Chrome'
 
 - script: |
