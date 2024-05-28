@@ -267,11 +267,11 @@ exports.config = {
    * @param {String} cid worker id (e.g. 0-0)
    */
   beforeSession: function (config, capabilities, specs, cid) {
-    if (specs[0].includes("API")) {
-      capabilities["goog:chromeOptions"] = {
-        args: ["--incognito", "--headless"],
-      };
-    }
+    // if (specs[0].includes("API")) {
+    //   capabilities["goog:chromeOptions"] = {
+    //     args: ["--incognito", "--headless"],
+    //   };
+    // }
   },
   /**
    * Gets executed before test execution begins. At this point you can access to all global
