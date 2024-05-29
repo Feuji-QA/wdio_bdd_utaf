@@ -14,18 +14,40 @@ jobs:
     runs-on: macos-12
     
     steps:
-    - name: pull the project into runner
+    - name: Checkout the repository
       uses: actions/checkout@v4
-    - name: setup appium
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Clean install dependencies
+      run: |
+        rm -rf node_modules
+        npm install
+
+    - name: Verify android_wdio.conf.js exists
+      run: ls -la ./android_wdio.conf.js
+
+    - name: Set up Appium
       run: |
         npm install -g appium
         appium -v
         appium &>/dev/null &
-    - name: run appium android tests
+
+    - name: Print working directory
+      run: pwd
+
+    - name: List project files
+      run: ls -la
+
+    - name: Print Node.js version
+      run: node -v
+
+    - name: Run Appium Android tests
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 29
-        script: |
-          cd wdio_bdd_utaf/wdio_bdd_utaf
-          npx wdio android_wdio.conf.js
+        script: npm run mobile
     
