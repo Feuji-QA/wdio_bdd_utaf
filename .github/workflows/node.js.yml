@@ -25,5 +25,7 @@ jobs:
       uses: reactivecircus/android-emulator-runner@v2
       with:
         api-level: 29
-        script: npm run mobile
+        script: |
+          cd wdio_bdd_utaf/wdio_bdd_utaf
+          npx wdio android_wdio.conf.js
     
