@@ -186,7 +186,7 @@ exports.config = {
   // see also: https://webdriver.io/docs/dot-reporter
   reporters: [
     ["cucumberjs-json", { jsonFolder: ".tmp/mobile/json/", language: "en" }],
-    [Reporter, RPconfig],
+   // [Reporter, RPconfig],
   ],
   // If you are using Cucumber you need to specify the location of your step definitions.
   cucumberOpts: {
