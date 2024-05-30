@@ -42,9 +42,6 @@ jobs:
     - name: List project files
       run: |
         ls -la
-        cd app
-        file letyshops-2-1-16.apk
-        ls -la letyshops-2-1-16.apk
         
     - name: Print Node.js version
       run: node -v
